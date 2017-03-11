@@ -1,19 +1,40 @@
-//Lets require/import the HTTP module
-var http = require('http');
+"use strict";
+//Declaring imports.
+const http = require('http');
+const httpdispatcher = require('httpdispatcher');
+const generatedPages = require('./source/generatedPages');
 
-//We need a function which handles requests and send response
-function handleRequest(request, response){
-    response.end('It Works!! Path Hit: ' + request.url);
+// Configuring the server routes.
+function configureRoutes(dispatcher) {
+    // Static folder configuration.
+    dispatcher.setStatic('/static');
+    dispatcher.setStaticDirname('static');
+    dispatcher.onGet("/page1",generatedPages.pageOne);
 }
 
 // Main function
 if (require.main === module) {
     //Create a server
-    var server = http.createServer(handleRequest);
-    
+    let dispatcher = new httpdispatcher();
+    // Inline function to use the local dispatcher.
+    let server = http.createServer(function(request, response) {
+        try {
+            //log the request on console
+            console.log(request.url);
+            //Disptach
+            dispatcher.dispatch(request, response);
+        }
+        catch (err) {
+            console.log(err);
+        }
+    });
+
+    // Setting the routing for the dispatcher.
+    configureRoutes(dispatcher);
+
     //Lets start our server
     // Listening to the environment $PORT
-    server.listen(process.env.PORT, function(){
+    server.listen(process.env.PORT, function() {
         //Callback triggered when server is successfully listening. Hurray!
         console.log("Server listening on: http://localhost:%s", process.env.PORT);
     });
