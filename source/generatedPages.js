@@ -1,42 +1,59 @@
 "use strict";
 // Imports.
 const Handlebars = require('handlebars');
+const fs = require('fs');
 
 // Constants.
 const TEMPLATE_ROOT = './templates';
 
 // Declaring exposed methods.
 module.exports = {
-    PageRouter: PageRouter,
+    configureDispatcher: configureDispatcher,
 };
-
-// PageRouter class.
-// TODO(omri): Add a loading for handlebars templates.
-// Constructor.
-function PageRouter() {
-    this.dispatcher = null;
-}
 
 // Configuring routes.
-PageRouter.prototype.configureDispatcher = function(dispatcher) {
-    this.dispatcher = dispatcher;
-    this.dispatcher.onGet('/page1', this.pageOne);
-    this.dispatcher.onGet('/page2', this.pageTwo);
-};
+function configureDispatcher(dispatcher) {
+    initTemplates();
+    dispatcher.setStatic('/static');
+    dispatcher.setStaticDirname('static');
+    dispatcher.onGet('/page1', pageOne);
+    dispatcher.onGet('/page2', pageTwo);
+    dispatcher.onGet('/page3', pageThree);
+}
 
-PageRouter.prototype.pageOne = function(req, res) {
+// Templates
+let simple_tmpl = '';
+
+function initTemplates() {
+    simple_tmpl = Handlebars.compile(fs.readFileSync(TEMPLATE_ROOT + '/simple.html', 'utf8'));
+}
+
+
+function pageOne(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/plain'
     });
     res.end('Page One');
-};
+}
 
-PageRouter.prototype.pageTwo = function(req, res) {
+function pageTwo(req, res) {
     res.writeHead(200, {
         'Content-Type': 'text/html'
     });
     let template = Handlebars.compile('<div>Hello {{myName}}</div>');
     res.end(template({
         'myName': 'omri'
+    }));
+}
+
+function pageThree(req, res) {
+    res.writeHead(200, {
+        'Content-Type': 'text/html'
+    });
+    let title = 'Hello';
+    let body = 'This is an interesting experiment';
+    res.end(simple_tmpl({
+        'title': title,
+        'body': body,
     }));
 };
